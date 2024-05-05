@@ -1,0 +1,5 @@
+//IT IS A BETTER PRACTICE TO IMPORT ALL THE COMPONENTS IN A INDEX.JS FILE, AND EXPORT IT FROM HERE
+
+import InputBox from "./InputBox";
+
+export {InputBox}
