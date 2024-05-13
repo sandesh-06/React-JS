@@ -22,6 +22,7 @@ class Service{
     //featuredImage: will be an ID which we will receive after uploading the file using storage.
     async createPost({title, slug, content, featuredImage, status, userId}){
        try {
+        console.log("method called")
          return await this.database.createDocument(
              config.appwriteDatabaseId,
              config.appwriteCollectionId,
@@ -89,13 +90,14 @@ class Service{
     //5. GET ALL POSTS WHOSE STATUS IS 'ACTIVE'
     async getAllPosts(){
         try {
-            return await this.database.listDocuments(
+            const allPosts = await this.database.listDocuments(
                 config.appwriteDatabaseId,
                 config.appwriteCollectionId,
                 [
                     Query.equal("status", "active")
                 ]
             )
+            return allPosts
         } catch (error) {
             console.log("Appwrite Error :: get all posts :: service.js error ::", error)
             return null;
@@ -108,15 +110,13 @@ class Service{
     async uploadFile(file){
         try {
             //will return the fileId
-            await this.storage.createFile(
+            return await this.storage.createFile(
                 config.appwriteBucketId,
                 ID.unique(),
                 file
             )
-            return true;
         } catch (error) {
             console.log("Appwrite Error :: upload file :: service.js error ::", error)
-            return false;
         }
     }
 
@@ -134,15 +134,10 @@ class Service{
 
     //3. GET FILE PREVIEW
     getFilePreview(fileId){
-        try {
-            //this returns the link of the file
-            return this.storage.getFilePreview(
-                config.appwriteBucketId,
-                fileId
-            )
-        } catch (error) {
-            console.log("Appwrite Error :: get file preview :: service.js error ::", error)
-        }
+        return this.storage.getFilePreview(
+            config.appwriteBucketId,
+            `${fileId}`
+        )
     }
 }
 

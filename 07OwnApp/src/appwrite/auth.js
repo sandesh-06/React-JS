@@ -38,7 +38,6 @@ export class AuthService{
 
     async getCurrentUser(){
         try {
-            console.log(config.appwriteUrl)
             const acc = this.account.get();
             if(acc) return acc;
             else return null;

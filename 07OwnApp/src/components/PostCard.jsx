@@ -3,7 +3,8 @@ import service from "../appwrite/service";
 import { Link } from "react-router-dom";
 const PostCard = ({ $id, title, featuredImage }) => {
   //NOTE: $id IS THE NAMING CONVENTION OF "APPWRITE"
-
+  // console.log("Inside PostCard", featuredImage)
+  // console.log(service.getFilePreview(featuredImage))
   return (
     <Link to={`/post/${$id}`}>
       <div className="w-full bg-gray-100 rounded-xl p-4">

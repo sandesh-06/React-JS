@@ -5,7 +5,7 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
-  const authStatus = useSelector((state) => state.auth.isLoggedIn);
+  const authStatus = useSelector((state) => state.authReducer.isLoggedIn);
 
   const navigate = useNavigate();
 

@@ -200,4 +200,23 @@ Suppose there were slice for authToken as well, then the state of store would lo
     authToken: null
 }
 ```
-So we can directly fetch the data from state of the `store` using `useSelector` hook.
+So we can directly fetch the data from state of the `store` using `useSelector` hook.  
+#### NOTE: FOR MULTIPLE REDUCERS IN STORE
+```javascript
+import { configureStore } from "@reduxjs/toolkit";
+import todoReducer from "../features/todo/todoSlice"
+
+export const store = configureStore({
+    reducer: {
+        todoReducer,
+        loginReducer,
+        authReducer
+    }
+})
+```  
+**From this list of reducers if you need to access the ***todos*** in `todoReducer` from the state of `store`, we need to:**
+```javascript
+import { useSelector } from 'react-redux'
+const Todos = () => {
+    const todos = useSelector(state => state.todoReducer.todos)
+```

@@ -7,7 +7,9 @@
 4. [Appwrite Storage](#appwrite-storage-sevice)
 5. [Reuseable Button Component](#reusable-button)
 6. [React Hook Form](#react-hook-form)
-
+7. [forwardRef Hook](#the-forwardref-hook)
+8. [Controller in `react-hook-form`](#controller-in-react-hook-form)
+9. [About `watch` in `react-hook-form`](#watch-in-react-hook-form)
 ***
 
 ### Env Variables in VITE:
@@ -310,4 +312,218 @@ The data will look like this:
 ***[Go To Contents ->](#contents)***  
 ***
 
+### The `forwardRef` Hook:
+First let me put you through a scenario without the `forwardRef` hook.  
+Consider we have an custom made `Input` component which can be reused.  
+```javascript
+//Input.jsx
+import React, { useId } from "react";
 
+const Input = ({ label, type = "text", className = "", ...props }) {
+  const id = useId();
+  return (
+    <div className="w-full">
+      {label && (
+        <label className="inline-block mb-1 pl-1" htmlFor={id}>
+          {label}
+        </label>
+      )}
+      <input
+        type={type}
+        id={id}
+        className={`px-3 py-2 rounded-lg bg-white text-black outline-none focus:bg-gray-50 duration-200 border border-gray-200 w-full ${className}`}
+        {...props}
+      />
+    </div>
+  );
+};
+
+export default Input;
+```  
+
+Now this `Input` component can be reused by just passing some props to it. Let's use this `Input` in a form:  
+```html
+<!-- Login.jsx -->
+<form action="" onSubmit={handleSubmit(formSubmitHandler)} className="mt-8">
+            <div className="space-y-5">
+                <Input 
+                label = "Email: "
+                placeholder="enter your email"
+                type="email"
+                {...register("email", {
+                    required:true
+                })}
+                />
+                <Input 
+                label = "Password: "
+                placeholder="enter your password"
+                type="password"
+                {...register("password", {
+                    required:true
+                })}
+                />
+                <Button type="submit">Sign In</Button>
+            </div>
+        </form>
+```  
+
+The input fields are displaying correctly and you can type values into them. However, when you submit the form, the values entered in the input fields are not collected by the form. This is because the input fields in **Login.jsx** and the ones in **Input.jsx** are separate. 
+
+Now, you need a way to establish a connection between the `Input` component used in **Login.jsx** and the one defined in **Input.jsx**. This connection will ensure that the values entered into the input fields are properly collected by the form when it's submitted."  
+
+To establish this connection we use `forwardRef`.  
+
+#### What is `forwardRef`?
+`forwardRef` is a react hook used to forward a reference to a child component from the parent component to access and interact with the child component from the parent component.  
+
+Now to achieve what the connection of the component in parent with the child, we need to wrap the child component using `forwardRef`.  
+```javascript
+import React, { useId } from "react";
+
+const Input = React.forwardRef(function Input(
+  { label, type = "text", className = "", ...props },
+  ref
+) {
+  const id = useId();
+  return (
+    <div className="w-full">
+      {label && (
+        <label className="inline-block mb-1 pl-1" htmlFor={id}>
+          {label}
+        </label>
+      )}
+      <input
+        type={type}
+        id={id}
+        className={`px-3 py-2 rounded-lg bg-white text-black outline-none focus:bg-gray-50 duration-200 border border-gray-200 w-full ${className}`}
+        {...props}
+        ref = {ref} //this will give refernce of this input field to the parent contianer
+      />
+    </div>
+  );
+});
+
+export default Input;
+```  
+This is how we use `forwardRef` to forward the reference of a component from parent component to child component.   
+
+Notice the keyword `ref` as the 2nd argument in the function `Input`, React automatically passess reference to this child component from the parent component through `ref`.   
+
+So we don't have to pass `ref` exclusively as a prop from the parent.   
+
+Now you can use this `Input` from any file or any form and since the reference is passed automatically, we can expect a normal `<"input"/>` tag behaviour. 
+
+```html
+<form action="" onSubmit={handleSubmit(formSubmitHandler)} className="mt-8">
+            <div className="space-y-5">
+                <Input 
+                label = "Email: "
+                placeholder="enter your email"
+                type="email"
+                {...register("email", {
+                    required:true
+                })}
+                />
+                <Input 
+                label = "Password: "
+                placeholder="enter your password"
+                type="password"
+                {...register("password", {
+                    required:true
+                })}
+                />
+                <Button type="submit">Sign In</Button>
+            </div>
+        </form>
+```   
+**NOTE: THERE'S NO `ref` PASSED FROM THE PARENT**.    
+***[Go To Contents ->](#contents)***  
+***  
+
+### Controller in `react-hook-form`:  
+
+`Controller` and `forwardRef` has the same functionality. `Controller` is provided by the `react-hook-form` where as `forwardRef` is provided by `React` itself.  
+
+#### How `Controller` works?  
+Just like how the refernce is forwarded from the parent to child component in `forwardRef`. Here we pass the `control` from the parent to child component exclusively(it is not done automatically).  
+
+The `control` is provided by the `useForm()` which we need just to pass it to the child component.  
+
+Once the parent takes control of the child component, the `react-hook-form` start monitoring the child component as well and takes the input from the child component to `data`.  
+Eg:  
+**ReactForm.jsx**  
+```javascript
+import React, { useRef } from "react";
+import { useForm } from "react-hook-form";
+import ReactFormChild from "./ReactFormChild";
+
+const ReactForm = () => {
+  const { control, handleSubmit, watch} = useForm();
+
+  const watchFields = watch();
+  const submitHandler = (data) => {
+    console.log(data);
+  };
+
+  return (
+    <div className="bg-slate-500 flex justify-center items-center min-h-screen">
+      <form action="" onSubmit={handleSubmit(submitHandler)}>
+        <ReactFormChild name="username" control={control} />
+        <ReactFormChild name="password" control={control}/>
+        <button type="submit" className="mt-10 bg-blue-200 p-3">
+          Submit
+        </button>
+        {watchFields && <p>Name: {watchFields.username}</p>}
+      </form>
+    </div>
+  );
+};
+
+export default ReactForm;
+```
+  
+**ReactForm.jsx**
+```javascript
+import React from 'react'
+import { Controller } from 'react-hook-form'
+
+const ReactFormChild = ({name, control, type="text", ...props}) => {
+
+  return (
+    <Controller 
+    name={name}
+    control={control}
+    render={({field:{onChange}})=>(
+        <div>
+            <input onChange={onChange} type={type} placeholder={`enter ${name}`}className='my-3' {...props}/> <br/>
+        </div>
+    )}
+    />
+  )
+};
+
+export default ReactFormChild
+```  
+This is the syntax to write a `Controller`.  
+The component which we want to render, should be given inside the `render` function.  
+
+The `field` has the functions which can be used in the tags.  
+***[Go To Contents ->](#contents)***  
+***    
+###  `watch` in `react-hook-form`:  
+`watch` as the name suggests it watches or monitors an input field continously, it can either monitor a specific input field or all input fields.  
+Eg:  
+If there's a input for say `username` and I watch the input using `watchField` variable
+```javascript
+{watch} = useForm()
+
+watchField = watch("username")
+``` 
+and I print the watchField using a p tag
+```javascript
+{watchFields && <p>Name: {watchFields.username}</p>}
+```  
+
+Now whenever I type something in `username`, it dynamically reflects in the the p tag as well.
+***[Go To Contents ->](#contents)***  
+*** 
